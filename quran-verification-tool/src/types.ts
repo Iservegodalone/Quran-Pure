@@ -7,6 +7,7 @@ export interface SnippetData {
   width: number;
   height: number;
   locked: boolean;
+  page: number;
 }
 
 export interface SaveState {

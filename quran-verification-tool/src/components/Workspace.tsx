@@ -96,6 +96,7 @@ export default function Workspace({
         canvas.height = Math.floor(viewport.height);
         const ctx = canvas.getContext("2d")!;
 
+        // @ts-ignore pdfjs-dist v5 types require `canvas` but it works without it
         return page.render({ canvasContext: ctx, viewport }).promise.then(() => {
           if (cancelled) return;
           pdfOffscreenRef.current = canvas;
@@ -136,8 +137,9 @@ export default function Workspace({
 
     const renderComposite = async () => {
       // Load all snippet images (skip failed ones)
+      const pageSnippets = snippets.filter((s) => s.page === currentPage);
       const loaded = await Promise.all(
-        snippets.map(async (s) => ({
+        pageSnippets.map(async (s) => ({
           snippet: s,
           img: await loadImage(s.id, s.imageDataUrl),
         }))
@@ -224,7 +226,7 @@ export default function Workspace({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verificationMode, snippets, pdfRenderCount]);
+  }, [verificationMode, snippets, pdfRenderCount, currentPage]);
 
   // Wheel zoom (centered on cursor)
   useEffect(() => {
@@ -322,8 +324,8 @@ export default function Workspace({
           }}
         />
 
-        {/* Snippet overlays */}
-        {snippets.map((s) => (
+        {/* Snippet overlays — only show snippets for current page */}
+        {snippets.filter((s) => s.page === currentPage).map((s) => (
           <SnippetOverlay
             key={s.id}
             snippet={s}

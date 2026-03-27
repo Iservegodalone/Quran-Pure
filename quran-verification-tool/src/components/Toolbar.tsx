@@ -11,7 +11,7 @@ interface ToolbarProps {
   globalOpacity: number;
   onOpacityChange: (opacity: number) => void;
   onSave: () => void;
-  onLoad: (file: File) => void;
+  onLoad: () => void;
   hasPdf: boolean;
 }
 
@@ -31,7 +31,6 @@ export default function Toolbar({
 }: ToolbarProps) {
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const snippetInputRef = useRef<HTMLInputElement>(null);
-  const loadInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="toolbar">
@@ -122,17 +121,7 @@ export default function Toolbar({
         <button onClick={onSave} disabled={!hasPdf}>
           Speichern
         </button>
-        <button onClick={() => loadInputRef.current?.click()}>Laden</button>
-        <input
-          ref={loadInputRef}
-          type="file"
-          accept=".json"
-          style={{ display: "none" }}
-          onChange={(e) => {
-            if (e.target.files?.[0]) onLoad(e.target.files[0]);
-            e.target.value = "";
-          }}
-        />
+        <button onClick={onLoad}>Laden</button>
       </div>
     </div>
   );

@@ -18,7 +18,9 @@ The rasm — the skeletal, undotted script — comes closest to the earliest kno
 
 ### Numbered and Unnumbered
 
-Each edition is available in both a numbered and an unnumbered variant. The verse numbers follow the Hafs numbering system, which is what the Tanzil corpus uses. We chose this system to ensure verification uniformity — when comparing our PDFs against tanzil.net, the numbering must match. Alternative counting methods exist and may well be legitimate, but the Hafs system is widely used and serves as a practical, commonly understood basis for locating and communicating about specific verses.
+The vocalized and consonantal editions are each available in both a numbered and an unnumbered variant. The rasm, however, is offered only unnumbered — its purpose is to present the scripture in its purest form, as close as possible to a Unicode rendering of the original skeletal text. Its layout follows the exact same verse division logic as the other editions, so verses can easily be counted if needed.
+
+The verse numbers follow the Hafs numbering system, which is what the Tanzil corpus uses. We chose this system to ensure verification uniformity — when comparing our PDFs against tanzil.net, the numbering must match. Alternative counting methods exist and may well be legitimate, but the Hafs system is widely used and serves as a practical, commonly understood basis for locating and communicating about specific verses.
 
 The numbering itself is not part of the original skeletal text. It is a navigational aid, nothing more. Likewise, the page layout and typographic choices in our PDFs are our own design decisions made for visual ease — they are one way to display the Quran, not the only way.
 
@@ -28,11 +30,7 @@ The vocalized and consonantal editions serve to make access to the scripture eas
 
 ## On Verification and Authenticity
 
-We do not claim perfection. The process of generating PDFs from a digital can introduce formatting errors. This is why we continuously work to verify the authenticity of every edition we publish, and why we provide our own **Quran Verification Tool** so that anyone can — and we believe should — verify the text themselves.
-
-The verification tool allows you to visually compare our PDF editions against the online text at [tanzil.net](https://tanzil.net) using screenshot snippets and pixel-level analysis. It highlights exact matches, differences, and discrepancies in a color-coded overlay, minimizing the potential for human error in the verification process.
-
-We continuously perform this verification ourselves, but we believe every believer should take this responsibility into their own hands. We do not ask anyone to trust our output blindly.
+Every edition we publish is verified verse by verse against the source text at [tanzil.net](https://tanzil.net) using our **Quran Verification Tool**. We are confident in the accuracy of every file we release — and we encourage everyone to gain that same confidence by verifying the text themselves.
 
 ### Using the Verification Tool
 
@@ -44,13 +42,14 @@ npm install
 npm run dev
 ```
 
-1. Load one of the Quran PDF editions
-2. Take a screenshot snippet from the corresponding text at [tanzil.net](https://tanzil.net)
-3. Upload the snippet and position it over the matching passage in the PDF
-4. Enable verification mode to see the color-coded comparison:
-   - **Purple** — matching text (present in both PDF and snippet)
-   - **Blue** — text only in the PDF
-   - **Red** — text only in the snippet
+Load a Quran PDF edition, take screenshot snippets verse by verse from [tanzil.net](https://tanzil.net), and overlay each snippet onto the matching passage in the PDF. Save your progress at any point and continue until the entire document is verified.
+
+- **Verification mode** — enables pixel-level comparison: **Purple** = text matches, **Blue** = PDF only, **Red** = snippet only
+- **Transparency** — adjust snippet opacity to precisely align and compare text
+- **Lock** — lock positioned snippets in place to prevent accidental movement
+- **Resize** — drag edges or corners to scale snippets to match the PDF
+- **Save & Load** — export your full session (PDF, snippets, positions) as JSON and resume anytime
+- **Zoom & Pan** — scroll to zoom, drag the background to navigate
 
 ## Source Text and Tanzil Notice
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import type { SnippetData, SaveState } from "./types";
@@ -45,6 +45,7 @@ function App() {
   const [zoom, setZoom] = useState(1);
   const [panX, setPanX] = useState(50);
   const [panY, setPanY] = useState(50);
+  const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
 
   // Load PDF document when data changes
   useEffect(() => {
@@ -97,6 +98,7 @@ function App() {
         setZoom(1);
         setPanX(50);
         setPanY(50);
+        fileHandleRef.current = null;
       };
       reader.readAsArrayBuffer(file);
     },
@@ -127,6 +129,7 @@ function App() {
             width: w,
             height: h,
             locked: false,
+            page: currentPage,
           };
           setSnippets((prev) => [...prev, newSnippet]);
         };
@@ -137,7 +140,7 @@ function App() {
       };
       reader.readAsDataURL(file);
     });
-  }, []);
+  }, [currentPage]);
 
   const handleSnippetUpdate = useCallback((updated: SnippetData) => {
     setSnippets((prev) =>
@@ -149,7 +152,7 @@ function App() {
     setSnippets((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!pdfData) return;
 
     const state: SaveState = {
@@ -164,37 +167,132 @@ function App() {
       panY,
     };
 
-    const blob = new Blob([JSON.stringify(state)], {
-      type: "application/json",
-    });
+    const jsonString = JSON.stringify(state);
+    const suggestedName = `${pdfFileName.replace(/\.pdf$/i, "")}_verification.json`;
+
+    // --- Try File System Access API ---
+    if ("showSaveFilePicker" in window) {
+      // If we already have a handle, try to reuse it
+      if (fileHandleRef.current) {
+        try {
+          const perm = await fileHandleRef.current.queryPermission({ mode: "readwrite" });
+          if (perm !== "granted") {
+            const requested = await fileHandleRef.current.requestPermission({ mode: "readwrite" });
+            if (requested !== "granted") {
+              fileHandleRef.current = null;
+            }
+          }
+        } catch {
+          fileHandleRef.current = null;
+        }
+      }
+
+      if (fileHandleRef.current) {
+        try {
+          const writable = await fileHandleRef.current.createWritable();
+          await writable.write(jsonString);
+          await writable.close();
+          return;
+        } catch {
+          fileHandleRef.current = null;
+        }
+      }
+
+      // No valid handle — prompt user for save location
+      try {
+        const handle = await window.showSaveFilePicker!({
+          suggestedName,
+          types: [{
+            description: "JSON Files",
+            accept: { "application/json": [".json"] },
+          }],
+        });
+        fileHandleRef.current = handle;
+        const writable = await handle.createWritable();
+        await writable.write(jsonString);
+        await writable.close();
+        return;
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        // Fall through to legacy fallback
+      }
+    }
+
+    // --- Fallback: traditional blob download (Firefox, Safari) ---
+    const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${pdfFileName.replace(/\.pdf$/i, "")}_verification.json`;
+    a.download = suggestedName;
     a.click();
     URL.revokeObjectURL(url);
   }, [pdfData, pdfFileName, currentPage, snippets, globalOpacity, zoom, panX, panY]);
 
-  const handleLoad = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+  const handleLoad = useCallback(async () => {
+    let file: File;
+    let handle: FileSystemFileHandle | null = null;
+
+    if ("showOpenFilePicker" in window) {
       try {
-        const state = JSON.parse(e.target!.result as string) as SaveState;
-        if (state.pdfBase64) {
-          setPdfData(base64ToArrayBuffer(state.pdfBase64));
-        }
-        setPdfFileName(state.pdfFileName || "");
-        setCurrentPage(state.currentPage || 1);
-        setSnippets(state.snippets || []);
-        setGlobalOpacity(state.globalOpacity ?? 0.5);
-        setZoom(state.zoom ?? 1);
-        setPanX(state.panX ?? 50);
-        setPanY(state.panY ?? 50);
-      } catch {
-        alert("Fehler beim Laden der Datei.");
+        const [pickedHandle] = await window.showOpenFilePicker!({
+          types: [{
+            description: "JSON Files",
+            accept: { "application/json": [".json"] },
+          }],
+          multiple: false,
+        });
+        handle = pickedHandle;
+        file = await handle.getFile();
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        return;
       }
-    };
-    reader.readAsText(file);
+    } else {
+      // Fallback: traditional file input
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      const picked = await new Promise<File | null>((resolve) => {
+        input.onchange = () => resolve(input.files?.[0] ?? null);
+        const onFocus = () => {
+          window.removeEventListener("focus", onFocus);
+          setTimeout(() => resolve(null), 300);
+        };
+        window.addEventListener("focus", onFocus);
+        input.click();
+      });
+      if (!picked) return;
+      file = picked;
+    }
+
+    try {
+      const text = await file.text();
+      const state = JSON.parse(text) as SaveState;
+      if (state.pdfBase64) {
+        setPdfData(base64ToArrayBuffer(state.pdfBase64));
+      }
+      setPdfFileName(state.pdfFileName || "");
+      setCurrentPage(state.currentPage || 1);
+      setSnippets(
+        (state.snippets || []).map((s) => ({
+          ...s,
+          page: s.page ?? state.currentPage ?? 1,
+        }))
+      );
+      setGlobalOpacity(state.globalOpacity ?? 0.5);
+      setZoom(state.zoom ?? 1);
+      setPanX(state.panX ?? 50);
+      setPanY(state.panY ?? 50);
+
+      // Remember file handle for future saves
+      if (handle) {
+        fileHandleRef.current = handle;
+      }
+    } catch {
+      alert("Fehler beim Laden der Datei.");
+    }
   }, []);
 
   const handleZoomPan = useCallback(

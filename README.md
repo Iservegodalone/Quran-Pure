@@ -30,7 +30,7 @@ The vocalized and consonantal editions serve to make access to the scripture eas
 
 ## On Verification and Authenticity
 
-Every edition we publish is verified verse by verse against the source text at [tanzil.net](https://tanzil.net) using our **Quran Verification Tool**. We are confident in the accuracy of every file we release — and we encourage everyone to gain that same confidence by verifying the text themselves.
+We do not claim perfection. The process of generating PDFs from a digital corpus can introduce errors — which is why we are actively verifying every edition verse by verse against the source text at [tanzil.net](https://tanzil.net) using our **Quran Verification Tool**. This is an ongoing effort, and we provide the same tool so that anyone can verify the text themselves.
 
 ### Using the Verification Tool
 

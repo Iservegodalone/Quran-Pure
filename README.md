@@ -1,6 +1,6 @@
 # Quran Pure
 
-A project dedicated to presenting the Quran in its purest form — nothing but God's word. Based on the [Tanzil](https://tanzil.net) corpus, we offer several editions tailored to different levels of familiarity with the Arabic scripture, stripped of surah names, introductions, and any human additions.
+A project dedicated to presenting the Quran in its purest form — nothing but God's word. Based on the [Tanzil](https://tanzil.net) corpus, we offer several editions tailored to different levels of familiarity with the arabic scripture, stripped of surah names, introductions, and any human additions.
 
 ## Editions
 
